@@ -23,7 +23,11 @@ details and policy identifiers stay out of routine customer conversations.
 The local server uses `DefaultAzureCredential` and obtains short-lived Azure
 tokens server-side. The endpoint and token are never sent to the browser.
 Conversation history lives in process memory, keyed by an HttpOnly cookie;
-restart the server to clear it. Requests have size, turn and rate limits.
+select **New chat** to clear both the visible conversation and its server-side
+history before an independent check. Refreshing alone only clears the visible
+messages. New chat does not call Foundry, reset rate limits, or clear other
+browser sessions. Wait for any reply to finish before resetting.
+Requests have size, turn and rate limits.
 The server binds only to loopback and checks Host/Origin; it is **not ready for
 anonymous public hosting**. A hosted version needs access control, HTTPS,
 managed identity, cross-instance state and an abuse/cost policy.

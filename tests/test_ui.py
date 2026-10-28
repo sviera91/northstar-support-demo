@@ -34,12 +34,12 @@ def proxy(monkeypatch):
     thread.join()
 
 
-def post(base, body, *, origin=None, cookie=None):
+def post(base, body, *, origin=None, cookie=None, path="/api/chat"):
     headers = {"Content-Type": "application/json", "Origin": origin or base}
     if cookie:
         headers["Cookie"] = cookie
     request = Request(
-        base + "/api/chat", data=json.dumps(body).encode(), headers=headers
+        base + path, data=json.dumps(body).encode(), headers=headers
     )
     return urlopen(request, timeout=5)
 
@@ -82,6 +82,60 @@ def test_cross_origin_is_blocked(proxy):
         post(base, {"message": "hello"}, origin="https://untrusted.example")
     assert error.value.code == 403
     assert not calls
+
+
+def test_reset_clears_only_current_history_and_preserves_rate_limit(proxy):
+    base, calls = proxy
+    with post(base, {"message": "First chat"}) as response:
+        cookie = response.headers["Set-Cookie"].split(";")[0]
+    with post(base, {"message": "Another browser"}) as response:
+        other_cookie = response.headers["Set-Cookie"].split(";")[0]
+    with post(base, {}, cookie=cookie, path="/api/chat/reset") as response:
+        assert json.load(response) == {"status": "reset"}
+    session_id = cookie.split("=", 1)[1]
+    assert ui.sessions[session_id]["messages"] == []
+    assert len(ui.sessions[session_id]["calls"]) == 1
+    assert len(calls) == 2
+    with post(base, {"message": "Fresh start"}, cookie=cookie):
+        pass
+    assert calls[-1] == [{"role": "user", "content": "Fresh start"}]
+    with post(base, {"message": "Still here"}, cookie=other_cookie):
+        pass
+    assert len(calls[-1]) == 3
+
+
+def test_reset_without_session_is_idempotent(proxy):
+    base, calls = proxy
+    for _ in range(2):
+        with post(base, {}, path="/api/chat/reset") as response:
+            assert response.status == 200
+    assert not calls
+    assert not ui.sessions
+
+
+def test_reset_rejects_busy_session(proxy):
+    base, _ = proxy
+    with post(base, {"message": "Keep this"}) as response:
+        cookie = response.headers["Set-Cookie"].split(";")[0]
+    session = ui.sessions[cookie.split("=", 1)[1]]
+    session["busy"] = True
+    with pytest.raises(HTTPError) as error:
+        post(base, {}, cookie=cookie, path="/api/chat/reset")
+    assert error.value.code == 409
+    assert len(session["messages"]) == 2
+
+
+def test_cross_origin_reset_is_blocked(proxy):
+    base, _ = proxy
+    with post(base, {"message": "Keep this"}) as response:
+        cookie = response.headers["Set-Cookie"].split(";")[0]
+    with pytest.raises(HTTPError) as error:
+        post(
+            base, {}, cookie=cookie, path="/api/chat/reset",
+            origin="https://untrusted.example",
+        )
+    assert error.value.code == 403
+    assert len(ui.sessions[cookie.split("=", 1)[1]]["messages"]) == 2
 
 
 @pytest.mark.parametrize(

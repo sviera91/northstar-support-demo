@@ -111,6 +111,20 @@ class Handler(BaseHTTPRequestHandler):
             return self.json_response(
                 403, {"error": "Same-origin loopback requests only."}
             )
+        if self.path == "/api/chat/reset":
+            cookie = SimpleCookie()
+            cookie.load(self.headers.get("Cookie", ""))
+            session_id = cookie["northstar"].value if "northstar" in cookie else ""
+            with sessions_lock:
+                session = sessions.get(session_id)
+                if session:
+                    if session["busy"]:
+                        return self.json_response(
+                            409, {"error": "Please wait for the current reply."}
+                        )
+                    session["messages"] = []
+                    session["updated"] = time.monotonic()
+            return self.json_response(200, {"status": "reset"})
         if self.path != "/api/chat":
             return self.json_response(404, {"error": "Not found."})
         if self.headers.get_content_type() != "application/json":
@@ -160,7 +174,7 @@ class Handler(BaseHTTPRequestHandler):
             if len(session["messages"]) >= 40:
                 return self.json_response(
                     429,
-                    {"error": "Conversation limit reached. Restart the demo server."},
+                    {"error": "Conversation limit reached. Select New chat to start again."},
                 )
             session["busy"] = True
             session["updated"] = now
