@@ -52,6 +52,18 @@ def test_page_contains_no_remote_configuration(proxy):
     assert "services.ai.azure.com" not in html
 
 
+def test_customer_copy_uses_one_workshop_disclosure(proxy):
+    base, _ = proxy
+    with urlopen(base) as result:
+        html = result.read().decode()
+    assert "Need a hand with an order or a return?" in html
+    assert html.count("Workshop demonstration.") == 1
+    assert "demo order" not in html
+    assert "Built for the workshop" not in html
+    assert "hosted agent" not in html
+    assert "cold start" not in html
+
+
 def test_chat_preserves_history_server_side(proxy):
     base, calls = proxy
     with post(base, {"message": "Can I return something?"}) as response:

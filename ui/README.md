@@ -3,6 +3,9 @@
 This thin UI makes the fictional customer experience visible. The **agent code
 runs in Foundry**, not in this proxy. The page has no canned agent answers.
 Its initial greeting and suggested questions are UI copy, not model output.
+Customer-facing copy and agent replies use ordinary store-support language;
+one footer disclosure identifies the fictional workshop scenario. Deployment
+details and policy identifiers stay out of routine customer conversations.
 
 1. Deploy and verify the hosted agent as described in `docs/deployment.md`.
 2. Authenticate locally to Azure with an identity allowed to invoke that agent.

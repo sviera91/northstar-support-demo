@@ -100,7 +100,6 @@ textarea:focus { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
 button:disabled { opacity: .5; cursor: wait; }
 #status { min-height: 24px; font-size: 12px; color: var(--cp-text-muted); margin: 8px 0 0; }
 #status.error { color: var(--cp-danger); }
-.disclaimer { padding: 0 24px 20px; font-size: 11px; color: var(--cp-text-soft); margin: 0; }
 footer { color: var(--cp-text-muted); font-size: 12px; padding: 16px 7%; }
 @media(max-width: 760px) { header { padding: 0 24px; } main { grid-template-columns: 1fr; margin-top: 24px; padding: 0 20px; gap: 24px; } h1 { font-size: 36px; } .policy { display: none; } .intro { max-width: none; } }
 </style>
@@ -112,13 +111,13 @@ footer { color: var(--cp-text-muted); font-size: 12px; padding: 16px 7%; }
   <span class="badge">A little help, right when you need it</span>
   <h1>Good things.<br>Thoughtful support.</h1>
   <p class="intro">Questions about an order or a return? Let's find your next step together.</p>
-  <div class="policy"><h2>Returns, made clearer.</h2><p>Unopened items have a 30-day return window, including day 30. Opened or defective? We'll explain the support-review path.</p></div>
-  <div class="policy"><h2>Built for the workshop.</h2><p>Fictional store. Synthetic orders. A real Microsoft Foundry hosted agent, reached securely through this local demo.</p></div>
+  <div class="policy"><h2>Returns, made clearer.</h2><p>Unopened items can be returned within 30 days of delivery. If something arrived damaged or has already been opened, we'll help you find the next step.</p></div>
+  <div class="policy"><h2>Have your order number handy?</h2><p>Share it in the chat so we can check your order and walk you through your return options.</p></div>
 </section>
 <section class="chat" aria-label="Northstar support chat">
   <div class="chat-head"><div class="avatar" aria-hidden="true">&#10022;</div><div><strong>Northstar Support</strong><small>Order questions &amp; return guidance</small></div></div>
   <div id="messages" role="log" aria-live="polite" aria-label="Conversation">
-    <div class="message assistant">Hi! I'm Northstar's support assistant. I can explain our return policy or help check a demo order. What can I help with?</div>
+    <div class="message assistant">Hi! I'm Northstar's support assistant. Need a hand with an order or a return?</div>
   </div>
   <div class="suggestions">
     <button type="button">What's your return policy?</button>
@@ -127,12 +126,11 @@ footer { color: var(--cp-text-muted); font-size: 12px; padding: 16px 7%; }
   <form id="chat-form">
     <label class="label" for="message">Your message</label>
     <div class="compose"><textarea id="message" rows="2" maxlength="2000" placeholder="How can we help?" required></textarea><button id="send" type="submit">Send</button></div>
-    <p id="status" role="status">Connected through a local, server-side proxy.</p>
+    <p id="status" role="status"></p>
   </form>
-  <p class="disclaimer">Demo only. Don't enter personal or payment information. This assistant cannot issue refunds.</p>
 </section>
 </main>
-<footer>Northstar is a fictional brand for learning. Demo policy date: November 4, 2026.</footer>
+<footer>Workshop demonstration. Northstar is a fictional store with sample orders. Please don't enter personal or payment information.</footer>
 <script>
 const form = document.getElementById("chat-form");
 const input = document.getElementById("message");
@@ -155,7 +153,7 @@ async function submit(text) {
   input.disabled = true;
   document.querySelectorAll(".suggestions button").forEach(button => button.disabled = true);
   status.className = "";
-  status.textContent = "Northstar is checking... A cold start may take a little longer.";
+  status.textContent = "Northstar is checking your request...";
   const pending = addMessage("user", text);
   try {
     const response = await fetch("/api/chat", {
@@ -166,7 +164,7 @@ async function submit(text) {
     if (!response.ok) throw new Error(data.error || "Request failed.");
     addMessage("assistant", data.reply);
     input.value = "";
-    status.textContent = "Answered by the real hosted agent. No refund or order changes performed.";
+    status.textContent = "";
   } catch (error) {
     pending.remove();
     input.value = text;
