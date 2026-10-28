@@ -1,0 +1,116 @@
+name: Private Azure deployment
+on:
+  workflow_call:
+    inputs:
+      source_repository:
+        required: true
+        type: string
+      source_sha:
+        required: true
+        type: string
+      operation:
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_RESOURCE_GROUP:
+        required: true
+      AZURE_AI_PROJECT_NAME:
+        required: true
+      AZURE_LOCATION:
+        required: true
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: northstar-demo-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.event.repository.private == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: demo
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      AZURE_AI_PROJECT_NAME: ${{ secrets.AZURE_AI_PROJECT_NAME }}
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      DEPLOY_OPERATION: ${{ inputs.operation }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+    steps:
+      - name: Validate reviewed input
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$DEPLOY_OPERATION" == provision || "$DEPLOY_OPERATION" == deploy ]]
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ inputs.source_repository }}
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+      - name: Test rules and install configuration reader
+        run: |
+          python -m pip install pytest==8.4.2 PyYAML==6.0.3
+          pytest -q
+      - uses: Azure/setup-azd@17a3d5f2aa75a53c7f6fa815c18ef1445c73257f # v2
+        with:
+          version: "1.37.1"
+      - name: Install tested Foundry extension
+        run: azd extension install azure.ai.agents --version 1.0.0-beta.22
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Configure CLI authentication
+        run: azd config set auth.useAzCliAuth true
+      - name: Provision only within the isolated group
+        if: inputs.operation == 'provision'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/deployment_config.py parameters "$RUNNER_TEMP/parameters.json"
+          az deployment group create \
+            --name northstar-infra \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --template-file infra/modules/resources.bicep \
+            --parameters @"$RUNNER_TEMP/parameters.json" \
+            --query properties.outputs --output json > "$RUNNER_TEMP/outputs.json"
+          echo "Provisioning completed; outputs retained only in private ARM deployment state."
+      - name: Resolve private deployment environment
+        if: inputs.operation == 'deploy'
+        shell: bash
+        run: |
+          set -euo pipefail
+          az deployment group show --name northstar-infra \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.outputs --output json > "$RUNNER_TEMP/outputs.json"
+          python scripts/deployment_config.py environment "$RUNNER_TEMP/outputs.json"
+      - name: Deploy reviewed hosted-agent code
+        if: inputs.operation == 'deploy'
+        run: azd deploy --no-prompt
+      - name: Verify active deployment and remote day-30 response
+        if: inputs.operation == 'deploy'
+        shell: bash
+        run: |
+          set -euo pipefail
+          azd ai agent show --output json > "$RUNNER_TEMP/agent.json"
+          python scripts/verify_deployment.py "$RUNNER_TEMP/agent.json"
+          azd ai agent invoke --new-session --new-conversation \
+            "Can I return CHI1003? The grinder is unopened." \
+            > "$RUNNER_TEMP/response.txt"
+          test -s "$RUNNER_TEMP/response.txt"
+          cat "$RUNNER_TEMP/response.txt"
+          echo "Remote invocation completed. Review the answer and tool evidence before calling rehearsal complete."
