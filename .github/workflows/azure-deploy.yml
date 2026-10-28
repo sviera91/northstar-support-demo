@@ -62,7 +62,7 @@ jobs:
           python-version: "3.13"
       - name: Test rules and install configuration reader
         run: |
-          python -m pip install -r src/northstar_support/requirements.txt pytest==8.4.2 PyYAML==6.0.3
+          python -m pip install -r src/northstar_support/requirements.txt pytest==9.0.3 PyYAML==6.0.3
           pytest -q
       - uses: Azure/setup-azd@17a3d5f2aa75a53c7f6fa815c18ef1445c73257f # v2
         with:

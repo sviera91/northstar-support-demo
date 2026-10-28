@@ -30,7 +30,7 @@ def main() -> None:
             )
         )
         return
-    outputs = json.loads(args.path.read_text())
+    outputs = {key.upper(): value for key, value in json.loads(args.path.read_text()).items()}
     required = [
         "AZURE_AI_PROJECT_ID",
         "FOUNDRY_PROJECT_ENDPOINT",
