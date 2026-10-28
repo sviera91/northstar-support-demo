@@ -4,7 +4,7 @@ Learn the **GitHub Copilot App** by building a fictional returns-support agent,
 then run your code as a **Microsoft Foundry hosted agent**.
 
 This is a presenter-led teaching example, not a production support application.
-Every order is fake. There is no customer database, payment integration, web UI,
+Every order is fake. There is no customer database, payment integration,
 vector search, or real personal data. A thin local customer-care chat UI calls
 the real hosted agent through a server-side proxy; it is not separately hosted.
 
@@ -21,6 +21,23 @@ Copilot App + repository                 Foundry hosted agent (your Python code)
 Copilot's skills, plugins and MCP connections do **not** automatically become
 tools of the deployed support agent. Its only tool is explicitly registered,
 read-only `lookup_order`.
+
+### What the agent actually reads
+
+`instructions.md` and `policies.md` are loaded into the agent's instructions at
+startup. The model uses that policy context and the conversation; there is no
+vector index, document search, or fine-tuning.
+
+The three orders live in `src/northstar_support/orders.json`, packaged with the
+Python agent. They are not database records. The model asks the registered
+`lookup_order` tool for an order; `returns.py` reads the fixture and calculates
+eligibility against the fixed server date. The tool returns facts and an
+eligibility result, and the model explains them. It cannot issue a refund.
+
+The runtime uses Microsoft Agent Framework's `Agent`, `FoundryChatClient`, and
+`ResponsesHostServer`. The sample deployment requests `gpt-4.1-mini`; use a
+supported model deployment in your own project. Browser messages go through the
+local Python proxy to the hosted agent; Azure credentials stay server-side.
 
 ## Start without Azure (free)
 

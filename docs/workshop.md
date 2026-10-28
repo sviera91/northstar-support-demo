@@ -64,6 +64,19 @@ Use the natural two-turn headphones prompt; don't put a test's expected answer
 or the server date into the customer's mouth. Start a fresh conversation for
 each independent check, but preserve history within the two-turn case.
 
+The instruction-override prompt can be blocked by Foundry's safety filter
+before the agent runs. A response with `status=incomplete` and
+`incomplete_details.reason=content_filter` demonstrates that platform guard,
+not independent proof of the agent's own instruction resistance. The local
+website displays an explicit refusal rather than an infrastructure error.
+
+With the pinned preview hosting SDK, recorded `function_call.arguments` can
+contain a repeated JSON object. The correlated tool output and customer answer
+were correct in the rehearsal checks, but that arguments string is not valid
+JSON and must not be presented as a clean trace or blindly replayed. Keep raw
+evidence private and distinguish this SDK serialization limitation from the
+actual eligibility result. Do not repair traces by guessing or halving strings.
+
 ## Presenter pacing and fallback
 
 Demonstrate the App controls before the implementation, then inspect local

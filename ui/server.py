@@ -24,7 +24,16 @@ sessions: dict[str, dict] = {}
 sessions_lock = threading.Lock()
 
 
+class RequestBlockedError(ValueError):
+    """The upstream safety filter rejected the request, not an infrastructure failure."""
+
+
 def response_text(payload: dict) -> str:
+    if (
+        payload.get("status") == "incomplete"
+        and (payload.get("incomplete_details") or {}).get("reason") == "content_filter"
+    ):
+        raise RequestBlockedError("The hosted service blocked this request.")
     if payload.get("status") != "completed":
         raise ValueError("The hosted agent did not complete the response.")
     parts = [
@@ -191,30 +200,30 @@ class Handler(BaseHTTPRequestHandler):
                     {"role": "assistant", "content": answer},
                 ]
                 session["updated"] = time.monotonic()
-            return self.json_response(
-                200,
-                {"reply": answer},
-                f"northstar={session_id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=1800",
-            )
+            code, payload = 200, {"reply": answer}
+        except RequestBlockedError:
+            logger.info("Hosted-agent request rejected by content filter")
+            code, payload = 422, {
+                "error": "I can't help with that request. Please ask about an order or our return policy."
+            }
         except (HTTPError, URLError, TimeoutError, ValueError):
             logger.exception("Hosted-agent request failed")
-            return self.json_response(
-                502,
-                {
-                    "error": "The hosted agent could not complete this request. Check the server logs and retry."
-                },
-            )
+            code, payload = 502, {
+                "error": "The hosted agent could not complete this request. Check the server logs and retry."
+            }
         except Exception:
             logger.exception("Unexpected authentication or hosted-agent failure")
-            return self.json_response(
-                502,
-                {
-                    "error": "The hosted agent is unavailable. Check Azure authentication and server logs."
-                },
-            )
+            code, payload = 502, {
+                "error": "The hosted agent is unavailable. Check Azure authentication and server logs."
+            }
         finally:
             with sessions_lock:
                 session["busy"] = False
+        return self.json_response(
+            code,
+            payload,
+            f"northstar={session_id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=1800",
+        )
 
 
 def main():

@@ -35,3 +35,8 @@ managed identity, cross-instance state and an abuse/cost policy.
 Neither the page nor `/health` proves the agent is reachable. Only a successful
 chat response from the real endpoint does. Errors remain visible and are never
 replaced with simulated success.
+
+An upstream safety-filter rejection is shown as a request refusal (HTTP 422),
+not a service outage. Rejected requests do not enter conversation history.
+Other incomplete responses and upstream failures remain explicit errors;
+partial assistant text is not presented as a completed answer.

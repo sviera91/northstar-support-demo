@@ -125,6 +125,23 @@ def test_reset_rejects_busy_session(proxy):
     assert len(session["messages"]) == 2
 
 
+def test_reply_releases_busy_before_sending_response(proxy, monkeypatch):
+    base, _ = proxy
+    original = ui.Handler.json_response
+    observed = []
+
+    def inspect_response(handler, code, payload, cookie=None):
+        if cookie:
+            session_id = cookie.split(";", 1)[0].split("=", 1)[1]
+            observed.append(ui.sessions[session_id]["busy"])
+        return original(handler, code, payload, cookie)
+
+    monkeypatch.setattr(ui.Handler, "json_response", inspect_response)
+    with post(base, {"message": "Hello"}):
+        pass
+    assert observed == [False]
+
+
 def test_cross_origin_reset_is_blocked(proxy):
     base, _ = proxy
     with post(base, {"message": "Keep this"}) as response:
@@ -169,11 +186,35 @@ def test_upstream_error_is_not_a_fake_answer(proxy, monkeypatch):
     assert "error" in json.load(error.value)
 
 
+def test_content_filter_is_not_reported_as_server_failure(proxy, monkeypatch):
+    base, _ = proxy
+
+    def blocked(_):
+        return ui.response_text({
+            "status": "incomplete",
+            "incomplete_details": {"reason": "content_filter"},
+            "output": [],
+        })
+
+    monkeypatch.setattr(ui, "invoke", blocked)
+    with pytest.raises(HTTPError) as error:
+        post(base, {"message": "Blocked request"})
+    assert error.value.code == 422
+    assert "can't help with that request" in json.load(error.value)["error"]
+    assert all(not session["messages"] for session in ui.sessions.values())
+
+
 def test_response_shape_requires_completion():
     with pytest.raises(ValueError, match="complete"):
         ui.response_text({"status": "failed", "output": []})
     with pytest.raises(ValueError, match="no assistant text"):
         ui.response_text({"status": "completed", "output": []})
+    with pytest.raises(ValueError, match="complete"):
+        ui.response_text({
+            "status": "incomplete",
+            "incomplete_details": {"reason": "max_output_tokens"},
+            "output": [],
+        })
     assert (
         ui.response_text(
             {
