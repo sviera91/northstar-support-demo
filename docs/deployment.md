@@ -5,6 +5,11 @@
 - Python 3.13+, uv, Git, GitHub CLI, Azure CLI, Azure Developer CLI 1.37.1+.
 - Foundry azd extension `microsoft.foundry`; the tested agents extension is
   `azure.ai.agents` 1.0.0-beta.22.
+- Tested Python adapter pair: `agent-framework-foundry` 1.15.0 and
+  `agent-framework-foundry-hosting` 1.0.0b261022. Keep the lockfile and exported
+  requirements together. An older sample adapter with newer core packages
+  duplicated streamed text; the aligned pair was checked on the actual
+  Responses wire output, not papered over by deduplicating UI text.
 - An Azure subscription with suitable model quota and hosted-agent availability.
   The checked baseline region is `northcentralus`; recheck for your subscription.
 - Azure permissions to create an isolated resource group, managed identity,
