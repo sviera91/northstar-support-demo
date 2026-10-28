@@ -16,8 +16,8 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install test dependencies
-        run: python -m pip install pytest==8.4.2 ruff==0.14.2
+        run: python -m pip install -r src/northstar_support/requirements.txt pytest==8.4.2 ruff==0.14.2
       - name: Lint
-        run: ruff check src/northstar_support/main.py src/northstar_support/returns.py tests
+        run: ruff check src/northstar_support/main.py src/northstar_support/returns.py tests ui scripts
       - name: Deterministic business rules
         run: pytest -q

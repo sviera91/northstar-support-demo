@@ -20,15 +20,21 @@ logger = logging.getLogger(__name__)
 
 @tool(approval_mode="never_require")
 def lookup_order(
-    order_id: Annotated[str, Field(description="Customer-supplied order number, such as CHI1001.")],
+    order_id: Annotated[
+        str, Field(description="Customer-supplied order number, such as CHI1001.")
+    ],
     condition: Annotated[
         Literal["unknown", "unopened", "opened", "defective"],
-        Field(description="Customer-stated condition. Use unknown if they have not said."),
+        Field(
+            description="Customer-stated condition. Use unknown if they have not said."
+        ),
     ] = "unknown",
 ) -> str:
     """Read a fictional order and calculate return eligibility; never changes orders or issues refunds."""
     result = lookup(
-        order_id, condition, simulate_outage=os.getenv("NORTHSTAR_SIMULATE_OUTAGE") == "1"
+        order_id,
+        condition,
+        simulate_outage=os.getenv("NORTHSTAR_SIMULATE_OUTAGE") == "1",
     )
     logger.info("lookup_order outcome=%s", result["status"])
     return json.dumps(result)
@@ -38,13 +44,19 @@ def build_agent() -> Agent:
     load_dotenv()
     model = os.environ.get("AZURE_AI_MODEL_DEPLOYMENT_NAME")
     if not model:
-        raise RuntimeError("Set AZURE_AI_MODEL_DEPLOYMENT_NAME to your deployed model name.")
+        raise RuntimeError(
+            "Set AZURE_AI_MODEL_DEPLOYMENT_NAME to your deployed model name."
+        )
     client = FoundryChatClient(
         project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
         model=model,
         credential=DefaultAzureCredential(),
     )
-    instructions = (ROOT / "instructions.md").read_text() + "\n" + (ROOT / "policies.md").read_text()
+    instructions = (
+        (ROOT / "instructions.md").read_text()
+        + "\n"
+        + (ROOT / "policies.md").read_text()
+    )
     return Agent(
         client=client,
         name="Northstar Support",

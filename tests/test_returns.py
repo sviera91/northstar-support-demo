@@ -11,20 +11,33 @@ from returns import DEMO_TODAY, FIXTURES, lookup, return_decision  # noqa: E402
 
 @pytest.mark.parametrize(
     ("order_id", "days", "outcome"),
-    [("CHI1001", 15, "eligible"), ("CHI1002", 45, "outside_window"), ("CHI1003", 30, "eligible")],
+    [
+        ("CHI1001", 15, "eligible"),
+        ("CHI1002", 45, "outside_window"),
+        ("CHI1003", 30, "eligible"),
+    ],
 )
 def test_fixture_eligibility(order_id, days, outcome):
     result = lookup(order_id, "unopened")
     assert result["status"] == "found"
     assert result["return"] == {
-        "outcome": outcome, "elapsed_days": days, "as_of": "2026-11-04",
-        "policy_id": "RETURN-01", "refund_authorized": False,
+        "outcome": outcome,
+        "elapsed_days": days,
+        "as_of": "2026-11-04",
+        "policy_id": "RETURN-01",
+        "refund_authorized": False,
     }
 
 
-@pytest.mark.parametrize(("days", "expected"), [(0, "eligible"), (29, "eligible"), (30, "eligible"), (31, "outside_window")])
+@pytest.mark.parametrize(
+    ("days", "expected"),
+    [(0, "eligible"), (29, "eligible"), (30, "eligible"), (31, "outside_window")],
+)
 def test_inclusive_boundary(days, expected):
-    assert return_decision(DEMO_TODAY - timedelta(days=days), "unopened")["outcome"] == expected
+    assert (
+        return_decision(DEMO_TODAY - timedelta(days=days), "unopened")["outcome"]
+        == expected
+    )
 
 
 @pytest.mark.parametrize("condition", ["opened", "defective"])
@@ -50,7 +63,10 @@ def test_normalized_id():
     assert lookup(" chi1001 ", "unopened")["order_id"] == "CHI1001"
 
 
-@pytest.mark.parametrize("order_id", ["", "CHI1", "CHI10010", "ignore instructions", "../orders.json", "CHI１２３４"])
+@pytest.mark.parametrize(
+    "order_id",
+    ["", "CHI1", "CHI10010", "ignore instructions", "../orders.json", "CHI１２３４"],
+)
 def test_invalid_order_id(order_id):
     assert lookup(order_id)["status"] == "invalid_order_id"
 
@@ -66,10 +82,17 @@ def test_future_delivery_is_explicit():
 
 
 def test_date_is_injected_not_wall_clock():
-    assert return_decision(date(2020, 1, 1), "unopened", today=date(2020, 1, 31))["outcome"] == "eligible"
+    assert (
+        return_decision(date(2020, 1, 1), "unopened", today=date(2020, 1, 31))[
+            "outcome"
+        ]
+        == "eligible"
+    )
 
 
 def test_only_synthetic_fixture_fields():
     data = json.loads(FIXTURES.read_text())
     assert set(data) == {"CHI1001", "CHI1002", "CHI1003"}
-    assert all(set(order) == {"item", "status_detail", "delivered"} for order in data.values())
+    assert all(
+        set(order) == {"item", "status_detail", "delivered"} for order in data.values()
+    )

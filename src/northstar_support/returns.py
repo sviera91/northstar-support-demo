@@ -12,7 +12,9 @@ CONDITIONS = {"unknown", "unopened", "opened", "defective"}
 FIXTURES = Path(__file__).with_name("orders.json")
 
 
-def return_decision(delivered: date, condition: Condition, *, today: date = DEMO_TODAY) -> dict:
+def return_decision(
+    delivered: date, condition: Condition, *, today: date = DEMO_TODAY
+) -> dict:
     if condition not in CONDITIONS:
         raise ValueError(f"Unsupported condition: {condition}")
     elapsed_days = (today - delivered).days
@@ -30,19 +32,29 @@ def return_decision(delivered: date, condition: Condition, *, today: date = DEMO
         "outcome": outcome,
         "elapsed_days": elapsed_days,
         "as_of": today.isoformat(),
-        "policy_id": "RETURN-02" if condition in {"opened", "defective"} else "RETURN-01",
+        "policy_id": "RETURN-02"
+        if condition in {"opened", "defective"}
+        else "RETURN-01",
         "refund_authorized": False,
     }
 
 
-def lookup(order_id: str, condition: Condition = "unknown", *, simulate_outage: bool = False) -> dict:
+def lookup(
+    order_id: str, condition: Condition = "unknown", *, simulate_outage: bool = False
+) -> dict:
     normalized = order_id.strip().upper()
     if not re.fullmatch(r"CHI[0-9]{4}", normalized):
-        return {"status": "invalid_order_id", "message": "Use an order number like CHI1001."}
+        return {
+            "status": "invalid_order_id",
+            "message": "Use an order number like CHI1001.",
+        }
     if condition not in CONDITIONS:
         raise ValueError(f"Unsupported condition: {condition}")
     if simulate_outage:
-        return {"status": "unavailable", "message": "Order lookup is temporarily unavailable."}
+        return {
+            "status": "unavailable",
+            "message": "Order lookup is temporarily unavailable.",
+        }
     orders = json.loads(FIXTURES.read_text())
     order = orders.get(normalized)
     if order is None:

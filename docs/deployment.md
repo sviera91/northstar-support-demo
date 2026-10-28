@@ -72,6 +72,15 @@ credential with:
 - Subject: `repo:YOUR-OWNER/YOUR-PRIVATE-DEPLOY-REPO:environment:demo`
 - Audience: `api://AzureADTokenExchange`
 
+Some GitHub OIDC configurations include immutable owner/repository IDs in
+`sub`, such as `repo:OWNER@OWNER_ID/REPO@REPO_ID:environment:demo`. Inspect your
+actual configured subject and match it exactly; do not broaden the trust or
+remove the environment boundary. Never print or store the full OIDC token.
+
+Ensure `Microsoft.CognitiveServices` is registered in the subscription before
+provisioning. Resource-provider registration is a one-time operator task;
+the resource-group-scoped Actions identity cannot register it.
+
 Create a GitHub environment named `demo` in the private repo; restrict its
 deployment branch to your reviewed default branch. Enable required reviewers
 if your plan supports it. Manual dispatch and a trusted private default branch

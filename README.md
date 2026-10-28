@@ -5,7 +5,8 @@ then run your code as a **Microsoft Foundry hosted agent**.
 
 This is a presenter-led teaching example, not a production support application.
 Every order is fake. There is no customer database, payment integration, web UI,
-vector search, or real personal data.
+vector search, or real personal data. A thin local customer-care chat UI calls
+the real hosted agent through a server-side proxy; it is not separately hosted.
 
 ## What runs where
 
@@ -53,6 +54,7 @@ Day 30 is included. Eligibility never authorizes or executes a refund.
 - [Copilot App teaching exercises and demo checkpoints](docs/workshop.md)
 - [Recreate, deploy through Actions, verify and clean up](docs/deployment.md)
 - [Eight agent behavior checks](evals/behavior-checks.json)
+- [Run the local customer-care website](ui/README.md)
 - [Policy pack](src/northstar_support/policies.md)
 - [Source provenance and notices](THIRD_PARTY_NOTICES.md)
 
