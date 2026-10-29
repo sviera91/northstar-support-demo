@@ -14,6 +14,11 @@ This project was built with the microsoft-foundry skill. Before working on or an
 - Run `pytest -q` before changing the deterministic eligibility contract.
 - Skills/MCP/plugins used by Copilot are build-time capabilities, not automatically
   tools of the deployed agent.
+- Keep virtual environments, dependency certificate bundles and generated
+  dependency archives outside synced storage. For local uv commands, set
+  `UV_PROJECT_ENVIRONMENT="$HOME/.local/share/northstar-support/venv"` first;
+  never recreate `.venv` in a OneDrive/SharePoint checkout. Git ignores do not
+  prevent OneDrive sync.
 
 ## Key files
 

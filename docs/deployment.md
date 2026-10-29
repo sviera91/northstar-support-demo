@@ -133,8 +133,13 @@ private-repository/environment OIDC subject is trusted.
    azd env set AZURE_AI_MODEL_DEPLOYMENT_NAME gpt-4.1-mini
    ```
 
-4. From `src/northstar_support`, run `uv sync --frozen`, activate `.venv`,
-   then `azd ai agent run --no-client`. This is a local agent calling an Azure
+4. From `src/northstar_support`, export
+   `UV_PROJECT_ENVIRONMENT="$HOME/.local/share/northstar-support/venv"`,
+   run `uv sync --frozen`, and activate it with
+   `source "$UV_PROJECT_ENVIRONMENT/bin/activate"`.
+   Keep this environment outside OneDrive/SharePoint: dependencies contain
+   certificate bundles that must not be synced. Then run
+   `azd ai agent run --no-client`. This is a local agent calling an Azure
    model, not yet a hosted-code deployment. In another terminal run
    `azd ai agent invoke --local "Can I return CHI1003? The grinder is unopened."`
    Inspect tool evidence and stop the local server after testing.

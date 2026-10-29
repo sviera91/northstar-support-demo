@@ -11,11 +11,16 @@ details and policy identifiers stay out of routine customer conversations.
 2. Authenticate locally to Azure with an identity allowed to invoke that agent.
 3. Copy `ui/.env.example` to `ui/.env`. Set the exact Responses endpoint returned
    by `azd ai agent show`, including its API-version query if present.
-4. From the repository root, run:
+4. From the repository root, create/use an environment outside synced storage:
 
    ```bash
-   src/northstar_support/.venv/bin/python ui/server.py
+   export UV_PROJECT_ENVIRONMENT="$HOME/.local/share/northstar-support/venv"
+   uv sync --project src/northstar_support --frozen
+   "$UV_PROJECT_ENVIRONMENT/bin/python" ui/server.py
    ```
+
+   Do not create `.venv` inside a OneDrive/SharePoint checkout: dependency
+   certificate bundles are synced too, regardless of `.gitignore`.
 
 5. Open `http://127.0.0.1:7071`. Add `?scoutTheme=light` or `?scoutTheme=dark`
    to choose a theme. Stop with Ctrl+C.

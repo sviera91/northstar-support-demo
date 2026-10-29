@@ -46,6 +46,7 @@ Python 3.13 or later and [uv](https://docs.astral.sh/uv/) are required.
 ```bash
 git clone https://github.com/sviera91/northstar-support-demo.git
 cd northstar-support-demo/src/northstar_support
+export UV_PROJECT_ENVIRONMENT="$HOME/.local/share/northstar-support/venv"
 uv sync --frozen
 uv run pytest -q ../../tests
 uv run ruff check main.py returns.py ../../tests
@@ -54,6 +55,13 @@ uv run ruff check main.py returns.py ../../tests
 The deterministic rules need no credentials, model, or cloud resources. Public
 CI runs the same rules without Azure access. Model-backed local chat and hosted
 deployment require your own Azure subscription and can incur charges.
+
+Keep generated environments outside OneDrive/SharePoint and other synced
+folders. Dependencies include certificate trust bundles such as
+`certifi/cacert.pem`; `.gitignore` does not prevent cloud sync. Export
+`UV_PROJECT_ENVIRONMENT` as above in each development terminal before using uv,
+including local agent runs. Do not copy or archive the environment into the
+synced repository; recreate it from the lockfile instead.
 
 ## Try the customer conversation
 
