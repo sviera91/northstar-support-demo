@@ -24,7 +24,7 @@ def return_decision(
         outcome = "needs_condition"
     elif condition in {"opened", "defective"}:
         outcome = "support_review"
-    elif elapsed_days < 30:
+    elif elapsed_days <= 30:
         outcome = "eligible"
     else:
         outcome = "outside_window"
