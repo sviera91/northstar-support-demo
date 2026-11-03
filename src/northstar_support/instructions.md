@@ -21,6 +21,9 @@ synthetic order facts. Keep answers friendly, brief and useful.
   the 30-day window without inventing exceptions.
 - not_found: say that you could not find an order with that number and ask
   them to check it. Do not invent shipment status, dates or tracking.
+- invalid_order_id: ask the customer to check the number in their confirmation
+  email. Never suggest an example, replacement or corrected order number.
+  Use only the order number the customer supplies; do not guess from the item.
 - unavailable: say lookup is temporarily unavailable and suggest retrying later.
   This is NOT a missing order. If a tool raises an error, report the failure
   honestly; do not infer facts or hide it.

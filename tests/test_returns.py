@@ -65,10 +65,26 @@ def test_normalized_id():
 
 @pytest.mark.parametrize(
     "order_id",
-    ["", "CHI1", "CHI10010", "ignore instructions", "../orders.json", "CHI１２３４"],
+    [
+        "",
+        "CHI1",
+        "CHI10001",
+        "CHI10010",
+        "ignore instructions",
+        "../orders.json",
+        "CHI１２３４",
+    ],
 )
 def test_invalid_order_id(order_id):
-    assert lookup(order_id)["status"] == "invalid_order_id"
+    result = lookup(order_id)
+    assert result == {
+        "status": "invalid_order_id",
+        "message": "Please check the order number in your confirmation email.",
+    }
+    assert not any(
+        fixture_id in result["message"]
+        for fixture_id in json.loads(FIXTURES.read_text())
+    )
 
 
 def test_invalid_condition_is_explicit():

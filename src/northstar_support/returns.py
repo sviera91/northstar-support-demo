@@ -46,7 +46,7 @@ def lookup(
     if not re.fullmatch(r"CHI[0-9]{4}", normalized):
         return {
             "status": "invalid_order_id",
-            "message": "Use an order number like CHI1001.",
+            "message": "Please check the order number in your confirmation email.",
         }
     if condition not in CONDITIONS:
         raise ValueError(f"Unsupported condition: {condition}")

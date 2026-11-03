@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @tool(approval_mode="never_require")
 def lookup_order(
     order_id: Annotated[
-        str, Field(description="Customer-supplied order number, such as CHI1001.")
+        str, Field(description="Exact order number supplied by the customer.")
     ],
     condition: Annotated[
         Literal["unknown", "unopened", "opened", "defective"],

@@ -3,6 +3,10 @@
 This thin UI makes the fictional customer experience visible. The **agent code
 runs in Foundry**, not in this proxy. The page has no canned agent answers.
 Its initial greeting and suggested questions are UI copy, not model output.
+Suggested questions are generic entry points, not hints about fixture items.
+Invalid-order guidance asks customers to check their confirmation email rather
+than offering a valid sample order number. Runtime changes require a new hosted
+deployment; changing local files alone does not change Foundry responses.
 Customer-facing copy and agent replies use ordinary store-support language;
 one footer disclosure identifies the fictional workshop scenario. Deployment
 details and policy identifiers stay out of routine customer conversations.
